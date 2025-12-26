@@ -1,0 +1,81 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =========================
+# Virtual Environment
+# =========================
+.venv/
+venv/
+ENV/
+env/
+
+# =========================
+# Environment Variables
+# =========================
+.env
+
+# =========================
+# Streamlit
+# =========================
+.streamlit/
+.streamlit/secrets.toml
+
+# =========================
+# OS / Editor Files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Logs & Temporary Files
+# =========================
+*.log
+*.tmp
+*.bak
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# FAISS / Pickle / Vector Stores
+# =========================
+*.pkl
+*.faiss
+*.index
+
+# =========================
+# Cache
+# =========================
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# NLTK / Unstructured Downloads
+# =========================
+nltk_data/
+unstructured_data/
+
+# =========================
+# Model / Download Artifacts
+# =========================
+models/
+downloads/
