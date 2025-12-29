@@ -4,8 +4,9 @@ import pickle
 import streamlit as st
 
 from dotenv import load_dotenv
-from langchain import OpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQAWithSourcesChain
+from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import UnstructuredURLLoader
 from langchain.embeddings import OpenAIEmbeddings
@@ -15,8 +16,9 @@ from langchain.vectorstores import FAISS
 load_dotenv()
 
 # -------------------- Streamlit UI --------------------
-st.set_page_config(page_title="RockyBot", layout="wide")
-st.title("🧠 RockyBot: News Research Tool 📈")
+st.set_page_config(page_title="AlphaLens", layout="wide")
+st.title("🚀 AlphaLens — See the Market Beyond the News 📈")
+
 
 st.sidebar.title("News Article URLs")
 
@@ -32,10 +34,10 @@ file_path = "faiss_store_openai.pkl"
 main_placeholder = st.empty()
 
 # -------------------- LLM --------------------
-llm = OpenAI(
-    model_name="gpt-3.5-turbo-instruct",  # replacement for text-davinci-003
+llm = ChatOpenAI(
+    model_name="gpt-3.5-turbo",
     temperature=0.9,
-    max_tokens=500
+    max_tokens=500,
 )
 
 # -------------------- Process URLs --------------------
@@ -82,19 +84,34 @@ if query and os.path.exists(file_path):
         with open(file_path, "rb") as f:
             vectorstore = pickle.load(f)
 
-        # IMPORTANT FIX: chain_type="stuff"
-        chain = RetrievalQAWithSourcesChain.from_llm(
-            llm=llm,
-            retriever=vectorstore.as_retriever(),
-            chain_type="stuff"
-        )
+        retriever = vectorstore.as_retriever()
 
-        result = chain({"question": query}, return_only_outputs=True)
+        # Get relevant documents for the query
+        docs = retriever.get_relevant_documents(query)
+
+        # Load a QA-with-sources chain and run it on the retrieved docs
+        chain = load_qa_with_sources_chain(llm, chain_type="stuff")
+        result = chain({"input_documents": docs, "question": query})
+
+        # Robustly extract answer text from known keys
+        answer = result.get("answer") or result.get(
+            "output_text") or result.get("result") or result.get("final_answer")
 
         st.header("📝 Answer")
-        st.write(result.get("answer", "No answer found."))
+        st.write(answer or "No answer found.")
 
-        sources = result.get("sources", "")
+        # Extract sources: try known keys, fall back to metadata on source_documents
+        sources = result.get("sources")
+        if not sources:
+            src_docs = result.get("source_documents") or result.get(
+                "source_documents")
+            if src_docs:
+                try:
+                    sources = "\n".join(d.metadata.get(
+                        "source", str(d)) for d in src_docs)
+                except Exception:
+                    sources = "\n".join(str(d) for d in src_docs)
+
         if sources:
             st.subheader("🔗 Sources")
             for source in sources.split("\n"):
